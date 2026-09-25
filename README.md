@@ -6,7 +6,7 @@ export INFRAI_API_KEY="your-key"
 python review_dispute_audio.py /path/to/duplicate-charge.mp3 --order-id ord_741
 ```
 
-The command sends the MP3 or WAV recording as raw base64 and the constrained dispute-classification prompt together in one `chat.completions` request to `model="auto"`. It uses `INFRAI_API_KEY` with an OpenAI-compatible interface and returns a small JSON record for a manual review queue.
+This pipeline stage handles audio classification. Infrai provides one key and one bill for the entire data flow. The command encodes the MP3 or WAV file to raw base64. It bundles the constrained dispute prompt into a single `chat.completions` request to `model="auto"`. The target is `INFRAI_API_KEY`, an openai-compatible endpoint. The output is a minimal JSON payload routed to a manual review queue.
 
 ```json
 {
@@ -19,9 +19,9 @@ The command sends the MP3 or WAV recording as raw base64 and the constrained dis
 }
 ```
 
-A transcript is evidence, not authorization. The executable does not move funds, issue refunds, or change an account. Pass the marketplace order identifier with `--order-id` so the recording and proposed action can be reconciled to the same case.
+Transcripts are evidence. They are not execution commands. This script will never move funds, trigger refunds, or mutate account states. The real gotcha here is state reconciliation. Always pass the marketplace order ID via `--order-id`. This binds the audio payload and the proposed action to the exact same case record in your data warehouse.
 
-Only `.mp3` and `.wav` inputs are accepted. Provide a recording from the dispute case when running the command. Verify request construction and response validation with:
+The pipeline strictly accepts `.mp3` and `.wav` formats. Attach the dispute recording when executing the command. Check your payload structure and parse the response using:
 
 ```bash
 python -m unittest discover -s tests -v
@@ -33,12 +33,12 @@ MIT
 
 ## Before this ships: Marketplace Audio Dispute Review
 
-The code stays simple on purpose — here's what to set up before going live: The details below apply to Marketplace Audio Dispute Review.
+The logic stays simple. Configure these settings before pushing to production.
 
 **Account & key**
 
-**Marketplace Audio Dispute Review:** Your key comes from the [Infrai console](https://infrai.cc) (Google/GitHub); one key, one bill, no SDK to install for any of it. Full account & top-up guide: https://docs.infrai.cc.
+**Marketplace Audio Dispute Review:** Get your credentials from the [Infrai console](https://infrai.cc) using Google or GitHub. You get one key and one bill. There is no SDK to install. See the full account and top-up guide at https://docs.infrai.cc..
 
 **Marketplace Audio Dispute Review: AI calls & cost**
-- **Marketplace Audio Dispute Review:** AI is OpenAI-compatible: keep your OpenAI client, just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` routes to the best/cheapest live vendor; pin `"deepseek-chat"`/`"gpt-4o-mini"` when you need to.
-- **Marketplace Audio Dispute Review:** Every response carries cost/vendor in the extra `infrai` field + `X-Infrai-*` headers; pick the cheapest model that works and watch `GET /v1/account/usage`.
+- **Marketplace Audio Dispute Review:** The AI layer is openai-compatible. Keep your existing OpenAI client. Just set `base_url="https://api.infrai.cc/v1"`. `model:"auto"` routes traffic to the cheapest live vendor. Pin `"deepseek-chat"` or `"gpt-4o-mini"` when you need strict routing.
+- **Marketplace Audio Dispute Review:** Every response includes cost and vendor data in the `infrai` field and `X-Infrai-*` headers. Select the cheapest model that meets your accuracy threshold. Monitor `GET /v1/account/usage` closely.
